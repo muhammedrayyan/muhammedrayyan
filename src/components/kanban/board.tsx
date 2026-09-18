@@ -60,6 +60,7 @@ export function Board({
     null,
   );
   const [addStatusOpen, setAddStatusOpen] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const originContainer = useRef<string | null>(null);
 
   const allTasks = useMemo(() => Object.values(columns).flat(), [columns]);
@@ -108,13 +109,29 @@ export function Board({
     });
   }
 
+  async function resyncBoard() {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("tasks")
+      .select(
+        "*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_color), contact:contacts(id, name)",
+      )
+      .eq("project_id", project.id)
+      .order("position", { ascending: true });
+    setColumns(groupByStatus(statuses, (data as unknown as TaskWithRelations[] | null) ?? []));
+  }
+
   async function persistColumn(statusId: string, items: TaskWithRelations[]) {
     const supabase = createClient();
-    await Promise.all(
+    const results = await Promise.all(
       items.map((task, index) =>
         supabase.from("tasks").update({ status_id: statusId, position: index }).eq("id", task.id),
       ),
     );
+    if (results.some((r) => r.error)) {
+      setSyncError("Couldn't save that move — your board was refreshed to match what's actually saved.");
+      await resyncBoard();
+    }
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -260,6 +277,18 @@ export function Board({
           </div>
         </div>
       </div>
+
+      {syncError && (
+        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-8 py-2.5 text-sm text-amber-800">
+          <span>{syncError}</span>
+          <button
+            onClick={() => setSyncError(null)}
+            className="text-amber-700 underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {view === "board" ? (
         <DndContext

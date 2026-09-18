@@ -21,7 +21,7 @@ export default async function ProjectBoardPage({
         .order("position", { ascending: true }),
       supabase
         .from("tasks")
-        .select("*, assignee:profiles(id, full_name, avatar_color), contact:contacts(id, name)")
+        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_color), contact:contacts(id, name)")
         .eq("project_id", id)
         .order("position", { ascending: true }),
       supabase.from("profiles").select("*"),

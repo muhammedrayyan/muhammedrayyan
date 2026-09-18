@@ -24,7 +24,7 @@ export async function createTask(input: TaskInput & { position: number }) {
   const { data, error } = await supabase
     .from("tasks")
     .insert({ ...input, created_by: user?.id ?? null })
-    .select("*, assignee:profiles(id, full_name, avatar_color), contact:contacts(id, name)")
+    .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_color), contact:contacts(id, name)")
     .single();
 
   if (error) throw new Error(error.message);
@@ -43,7 +43,7 @@ export async function updateTask(
     .from("tasks")
     .update(input)
     .eq("id", id)
-    .select("*, assignee:profiles(id, full_name, avatar_color), contact:contacts(id, name)")
+    .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_color), contact:contacts(id, name)")
     .single();
 
   if (error) throw new Error(error.message);
