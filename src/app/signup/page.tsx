@@ -70,7 +70,7 @@ export default function SignupPage() {
   return (
     <AuthCard
       title="Create your workspace"
-      subtitle="Start organizing your contacts and work"
+      subtitle="Start managing customers, estimates and proposals"
       footer={
         <>
           Already have an account?{" "}

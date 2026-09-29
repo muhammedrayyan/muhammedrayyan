@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Plus, Users } from "lucide-react";
+import {
+  FileText,
+  LayoutGrid,
+  MapPin,
+  Plus,
+  ScrollText,
+  Snowflake,
+  Users,
+  UsersRound,
+} from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import type { Profile, Project } from "@/lib/types";
@@ -38,14 +47,19 @@ export function Sidebar({
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex items-center gap-2 px-5 py-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-          F
+          <Snowflake size={16} />
         </div>
-        <span className="text-sm font-semibold">Flowbase CRM</span>
+        <span className="text-sm font-semibold">Frostline CRM</span>
       </div>
 
       <nav className="flex flex-col gap-1 px-3">
         {navLink("/app", <LayoutGrid size={17} />, "Home")}
-        {navLink("/app/contacts", <Users size={17} />, "Contacts")}
+        {navLink("/app/contacts", <Users size={17} />, "Customers")}
+        {navLink("/app/properties", <MapPin size={17} />, "Properties")}
+        {navLink("/app/estimates", <FileText size={17} />, "Estimates")}
+        {navLink("/app/proposals", <ScrollText size={17} />, "Proposals")}
+        {navLink("/app/services", <Snowflake size={17} />, "Services")}
+        {navLink("/app/team", <UsersRound size={17} />, "Team")}
       </nav>
 
       <div className="mt-6 flex-1 overflow-y-auto px-3">

@@ -57,6 +57,81 @@ export const PROJECT_COLORS = [
   "#2EB67D",
 ];
 
+export const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  residential: "Residential",
+  commercial: "Commercial",
+  municipal: "Municipal",
+  hoa: "HOA / Community",
+};
+
+export const SERVICE_CATEGORY_LABELS: Record<string, string> = {
+  plowing: "Plowing",
+  salting: "Salting",
+  shoveling: "Shoveling",
+  hauling: "Hauling",
+  seasonal: "Seasonal contract",
+  other: "Other",
+};
+
+export const SERVICE_UNITS = [
+  "per visit",
+  "per push",
+  "per hour",
+  "per application",
+  "per truckload",
+  "per 1,000 sq ft",
+  "flat",
+];
+
+export const ESTIMATE_STATUS_STYLES: Record<
+  string,
+  { label: string; badge: string }
+> = {
+  draft: { label: "Draft", badge: "bg-slate-100 text-slate-600" },
+  sent: { label: "Sent", badge: "bg-sky-100 text-sky-700" },
+  approved: { label: "Approved", badge: "bg-emerald-100 text-emerald-700" },
+  declined: { label: "Declined", badge: "bg-rose-100 text-rose-700" },
+  expired: { label: "Expired", badge: "bg-amber-100 text-amber-700" },
+};
+
+export const PROPOSAL_STATUS_STYLES: Record<
+  string,
+  { label: string; badge: string }
+> = {
+  draft: { label: "Draft", badge: "bg-slate-100 text-slate-600" },
+  sent: { label: "Sent", badge: "bg-sky-100 text-sky-700" },
+  accepted: { label: "Accepted", badge: "bg-emerald-100 text-emerald-700" },
+  declined: { label: "Declined", badge: "bg-rose-100 text-rose-700" },
+  expired: { label: "Expired", badge: "bg-amber-100 text-amber-700" },
+};
+
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+}
+
+export function computeTotals(
+  lineItems: { quantity: number; unit_price: number }[],
+  taxRate: number,
+) {
+  const subtotal = lineItems.reduce(
+    (sum, item) => sum + item.quantity * item.unit_price,
+    0,
+  );
+  const taxAmount = subtotal * (taxRate / 100);
+  return {
+    subtotal: round2(subtotal),
+    taxAmount: round2(taxAmount),
+    total: round2(subtotal + taxAmount),
+  };
+}
+
+function round2(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
 export function formatDueDate(dateString: string | null) {
   if (!dateString) return null;
   const date = new Date(`${dateString}T00:00:00`);

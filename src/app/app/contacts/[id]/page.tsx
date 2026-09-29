@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Mail, Phone, Building2 } from "lucide-react";
+import { Mail, Phone, Building2, Plus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ContactDetailActions } from "@/components/contacts/contact-detail-actions";
-import { PRIORITY_STYLES } from "@/lib/utils";
+import { ContactProperties } from "@/components/properties/contact-properties";
+import {
+  ESTIMATE_STATUS_STYLES,
+  formatCurrency,
+  PRIORITY_STYLES,
+  PROPOSAL_STATUS_STYLES,
+} from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
-import type { Contact } from "@/lib/types";
+import type { Contact, Estimate, Property, Proposal } from "@/lib/types";
 
 type LinkedTask = {
   id: string;
@@ -24,24 +31,43 @@ export default async function ContactDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: contact }, { data: tasks }] = await Promise.all([
-    supabase.from("contacts").select("*").eq("id", id).single(),
-    supabase
-      .from("tasks")
-      .select("id, title, priority, project:projects(id, name, color), status:task_statuses(name, color)")
-      .eq("contact_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: contact }, { data: tasks }, { data: properties }, { data: estimates }, { data: proposals }] =
+    await Promise.all([
+      supabase.from("contacts").select("*").eq("id", id).single(),
+      supabase
+        .from("tasks")
+        .select("id, title, priority, project:projects(id, name, color), status:task_statuses(name, color)")
+        .eq("contact_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("properties")
+        .select("*")
+        .eq("contact_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("estimates")
+        .select("*")
+        .eq("contact_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("proposals")
+        .select("*")
+        .eq("contact_id", id)
+        .order("created_at", { ascending: false }),
+    ]);
 
   if (!contact) notFound();
 
   const typedContact = contact as Contact;
   const linkedTasks = (tasks as unknown as LinkedTask[] | null) ?? [];
+  const typedProperties = (properties as Property[] | null) ?? [];
+  const typedEstimates = (estimates as Estimate[] | null) ?? [];
+  const typedProposals = (proposals as Proposal[] | null) ?? [];
 
   return (
     <div className="mx-auto max-w-4xl p-8">
       <Link href="/app/contacts" className="text-sm text-muted hover:text-foreground">
-        ← All contacts
+        ← All customers
       </Link>
 
       <div className="mt-4 rounded-2xl border border-border bg-surface p-6">
@@ -81,6 +107,82 @@ export default async function ContactDetailPage({
         {typedContact.notes && (
           <div className="mt-5 rounded-xl bg-[#faf9fd] p-4 text-sm text-foreground/80 whitespace-pre-wrap">
             {typedContact.notes}
+          </div>
+        )}
+      </div>
+
+      <ContactProperties contactId={typedContact.id} properties={typedProperties} />
+
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Estimates ({typedEstimates.length})
+          </h2>
+          <Link href={`/app/estimates/new?contact=${typedContact.id}`}>
+            <Button variant="secondary" size="sm">
+              <Plus size={14} /> New estimate
+            </Button>
+          </Link>
+        </div>
+        {typedEstimates.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
+            No estimates for this customer yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {typedEstimates.map((estimate) => {
+              const style = ESTIMATE_STATUS_STYLES[estimate.status];
+              return (
+                <Link
+                  key={estimate.id}
+                  href={`/app/estimates/${estimate.id}`}
+                  className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-sm hover:bg-[#faf9fd]"
+                >
+                  <span className="font-medium">{estimate.number}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted">{formatCurrency(estimate.total)}</span>
+                    <Badge className={style.badge}>{style.label}</Badge>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Proposals ({typedProposals.length})
+          </h2>
+          <Link href={`/app/proposals/new?contact=${typedContact.id}`}>
+            <Button variant="secondary" size="sm">
+              <Plus size={14} /> New proposal
+            </Button>
+          </Link>
+        </div>
+        {typedProposals.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
+            No proposals for this customer yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {typedProposals.map((proposal) => {
+              const style = PROPOSAL_STATUS_STYLES[proposal.status];
+              return (
+                <Link
+                  key={proposal.id}
+                  href={`/app/proposals/${proposal.id}`}
+                  className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-sm hover:bg-[#faf9fd]"
+                >
+                  <span className="font-medium">{proposal.number}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted">{formatCurrency(proposal.total)}</span>
+                    <Badge className={style.badge}>{style.label}</Badge>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

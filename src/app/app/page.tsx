@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, FolderKanban, Plus, Users } from "lucide-react";
+import { AlertTriangle, FileText, Plus, ScrollText, Users } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn, formatDueDate, PRIORITY_STYLES } from "@/lib/utils";
+import {
+  cn,
+  ESTIMATE_STATUS_STYLES,
+  formatCurrency,
+  formatDueDate,
+  PRIORITY_STYLES,
+} from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import type { EstimateWithRelations } from "@/lib/types";
 
 type RecentTask = {
   id: string;
@@ -27,36 +34,41 @@ export default async function DashboardPage() {
     .eq("id", user!.id)
     .single();
 
-  const today = new Date();
-  const in7Days = new Date(today.getTime() + 7 * 86_400_000);
-  const todayStr = today.toISOString().slice(0, 10);
-  const in7DaysStr = in7Days.toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const [
     { count: contactCount },
-    { count: projectCount },
     { count: taskCount },
     { count: overdueCount },
-    { count: dueSoonCount },
+    { count: openEstimateCount },
+    { count: sentProposalCount },
     { data: recentTasks },
+    { data: recentEstimates },
   ] = await Promise.all([
     supabase.from("contacts").select("id", { count: "exact", head: true }),
-    supabase.from("projects").select("id", { count: "exact", head: true }),
     supabase.from("tasks").select("id", { count: "exact", head: true }),
     supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .lt("due_date", todayStr),
     supabase
-      .from("tasks")
+      .from("estimates")
       .select("id", { count: "exact", head: true })
-      .gte("due_date", todayStr)
-      .lte("due_date", in7DaysStr),
+      .in("status", ["draft", "sent"]),
+    supabase
+      .from("proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "sent"),
     supabase
       .from("tasks")
       .select("id, title, priority, due_date, project:projects(id, name, color), status:task_statuses(name, color)")
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("estimates")
+      .select("*, contact:contacts(id, name, company), property:properties(id, label)")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
@@ -71,22 +83,58 @@ export default async function DashboardPage() {
         <div className="flex gap-2">
           <Link href="/app/contacts">
             <Button variant="secondary" size="sm">
-              <Users size={14} /> Add contact
+              <Users size={14} /> Add customer
             </Button>
           </Link>
-          <Link href="/app/projects">
+          <Link href="/app/estimates/new">
             <Button size="sm">
-              <Plus size={14} /> New project
+              <Plus size={14} /> New estimate
             </Button>
           </Link>
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={Users} label="Contacts" value={contactCount ?? 0} color="#7B68EE" />
-        <StatCard icon={FolderKanban} label="Projects" value={projectCount ?? 0} color="#5B8DEF" />
-        <StatCard icon={CalendarClock} label="Due in 7 days" value={dueSoonCount ?? 0} color="#F2994A" />
-        <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount ?? 0} color="#E5573F" />
+        <StatCard icon={Users} label="Customers" value={contactCount ?? 0} color="#7B68EE" />
+        <StatCard icon={FileText} label="Open estimates" value={openEstimateCount ?? 0} color="#5B8DEF" />
+        <StatCard icon={ScrollText} label="Proposals awaiting reply" value={sentProposalCount ?? 0} color="#2FB7B0" />
+        <StatCard icon={AlertTriangle} label="Overdue tasks" value={overdueCount ?? 0} color="#E5573F" />
+      </div>
+
+      <div className="mb-8 rounded-2xl border border-border bg-surface">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="text-sm font-semibold">Recent estimates</h2>
+          <Link href="/app/estimates" className="text-xs text-primary hover:underline">
+            View all
+          </Link>
+        </div>
+        {!recentEstimates || recentEstimates.length === 0 ? (
+          <p className="p-8 text-center text-sm text-muted">
+            No estimates yet — create one for a customer to get started.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {(recentEstimates as unknown as EstimateWithRelations[]).map((estimate) => {
+              const style = ESTIMATE_STATUS_STYLES[estimate.status];
+              return (
+                <Link
+                  key={estimate.id}
+                  href={`/app/estimates/${estimate.id}`}
+                  className="flex items-center justify-between px-5 py-3.5 text-sm hover:bg-[#faf9fd]"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-foreground">{estimate.number}</span>
+                    <span className="text-muted">· {estimate.contact?.name ?? "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted">{formatCurrency(estimate.total)}</span>
+                    <Badge className={style.badge}>{style.label}</Badge>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-surface">

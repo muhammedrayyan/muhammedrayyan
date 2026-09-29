@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flowbase CRM",
-  description: "A self-hosted CRM with contacts, projects and task boards.",
+  title: "Frostline CRM",
+  description:
+    "A self-hosted CRM for snow & ice removal teams — customers, properties, estimates, proposals and job boards.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
