@@ -75,7 +75,7 @@ export function ContactFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={contact ? "Edit contact" : "New contact"}
+      title={contact ? "Edit customer" : "New customer"}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
         <div>
@@ -154,7 +154,7 @@ export function ContactFormModal({
             Cancel
           </Button>
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : contact ? "Save changes" : "Create contact"}
+            {saving ? "Saving…" : contact ? "Save changes" : "Create customer"}
           </Button>
         </div>
       </form>

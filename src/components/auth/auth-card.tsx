@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Snowflake } from "lucide-react";
 
 export function AuthCard({
   title,
@@ -16,7 +17,7 @@ export function AuthCard({
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">
-            F
+            <Snowflake size={20} />
           </div>
           <h1 className="text-xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted">{subtitle}</p>

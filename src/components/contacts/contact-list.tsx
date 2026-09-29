@@ -36,13 +36,13 @@ export function ContactList({ contacts }: { contacts: Contact[] }) {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Contacts</h1>
+          <h1 className="text-2xl font-semibold">Customers</h1>
           <p className="mt-1 text-sm text-muted">
-            {contacts.length} {contacts.length === 1 ? "contact" : "contacts"} in your workspace
+            {contacts.length} {contacts.length === 1 ? "customer" : "customers"} in your workspace
           </p>
         </div>
         <Button onClick={() => setModalOpen(true)}>
-          <Plus size={16} /> New contact
+          <Plus size={16} /> New customer
         </Button>
       </div>
 
@@ -53,7 +53,7 @@ export function ContactList({ contacts }: { contacts: Contact[] }) {
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
           />
           <Input
-            placeholder="Search contacts…"
+            placeholder="Search customers…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-9"
@@ -65,8 +65,8 @@ export function ContactList({ contacts }: { contacts: Contact[] }) {
         {filtered.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted">
             {contacts.length === 0
-              ? "No contacts yet. Add your first one to get started."
-              : "No contacts match your search."}
+              ? "No customers yet. Add your first one to get started."
+              : "No customers match your search."}
           </div>
         ) : (
           <table className="w-full text-left text-sm">
